@@ -10,6 +10,7 @@
     <div class="topbar">
         <div class="brand">业法协同系统 <span class="sub">管理工作台</span></div>
         <div class="user-info">
+            <span id="llmStatus" style="margin-right:12px;font-size:12px;cursor:pointer" onclick="toggleLLM()" title="点击切换大模型"></span>
             <span id="userName"></span>
             <span class="role-tag" style="background:#c0392b">管理员</span>
             <button class="logout" onclick="logout()">退出</button>
@@ -191,11 +192,37 @@
                 return;
             }
             document.getElementById('userName').textContent = currentUser.name;
+            loadLLMStatus();
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.onclick = () => switchTab(item.dataset.tab);
             });
             loadStats();
         })();
+
+        async function loadLLMStatus() {
+            try {
+                const res = await API.get('/api/ai/llm_status');
+                const el = document.getElementById('llmStatus');
+                if (res.enabled) {
+                    el.innerHTML = '<span style="color:#16a34a">● LLM 已启用</span>';
+                } else if (res.forced_off) {
+                    el.innerHTML = '<span style="color:#d97706">● LLM 已手动关闭</span>';
+                } else {
+                    el.innerHTML = '<span style="color:#6b7280">● LLM 未配置</span>';
+                }
+            } catch (e) { /* 忽略 */ }
+        }
+        async function toggleLLM() {
+            try {
+                const res = await API.get('/api/ai/llm_status');
+                const newOff = !res.forced_off;
+                const label = newOff ? '关闭' : '开启';
+                if (!confirm(`确认${label}大模型？`)) return;
+                await API.post('/api/ai/llm_toggle', { off: newOff });
+                toast(`大模型已${label}`, 'success');
+                loadLLMStatus();
+            } catch (e) { toast(e.message, 'error'); }
+        }
 
         function switchTab(tab) {
             document.querySelectorAll('.nav-item').forEach(i =>
@@ -745,7 +772,10 @@
                         <td>${escapeHtml(a.name)}</td>
                         <td><span class="tag">${roleMap[a.role] || a.role}</span></td>
                         <td>${escapeHtml(a.department || '-')}</td>
-                        <td>${a.id !== currentUser.id ? `<button class="btn btn-sm btn-danger" onclick="deleteAccount('${a.id}')">删除</button>` : '<span style="color:var(--text-light);font-size:12px">当前用户</span>'}</td>
+                        <td>
+                            <button class="btn btn-sm" onclick="showEditAccount('${a.id}')">编辑</button>
+                            ${a.id !== currentUser.id ? `<button class="btn btn-sm btn-danger" onclick="deleteAccount('${a.id}')">删除</button>` : '<span style="color:var(--text-light);font-size:12px">当前用户</span>'}
+                        </td>
                     </tr>`).join('');
             } catch (e) { toast(e.message, 'error'); }
         }
@@ -792,6 +822,45 @@
             try {
                 await API.del(`/api/auth/accounts/${id}`);
                 toast('已删除');
+                loadAccounts();
+            } catch (e) { toast(e.message, 'error'); }
+        }
+
+        async function showEditAccount(id) {
+            const accounts = await API.get('/api/auth/accounts');
+            const a = accounts.find(acc => acc.id === id);
+            if (!a) { toast('账户不存在', 'error'); return; }
+            const roleMap = { business: '业务', legal: '法务', admin: '管理员' };
+            const html = `
+                <h3>编辑账户：${a.id}</h3>
+                <div class="form-group"><label>角色</label>
+                    <select id="editRole">
+                        <option value="business" ${a.role === 'business' ? 'selected' : ''}>业务</option>
+                        <option value="legal" ${a.role === 'legal' ? 'selected' : ''}>法务</option>
+                        <option value="admin" ${a.role === 'admin' ? 'selected' : ''}>管理员</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>姓名</label><input type="text" id="editName" value="${escapeHtml(a.name)}"></div>
+                <div class="form-group"><label>新密码（留空不修改）</label><input type="password" id="editPwd" placeholder="留空则不修改密码"></div>
+                <div class="form-group"><label>部门</label><input type="text" id="editDept" value="${escapeHtml(a.department || '')}"></div>
+                <div class="toolbar">
+                    <button class="btn" onclick="submitEditAccount('${a.id}')">保存</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                </div>
+            `;
+            showModal(html);
+        }
+
+        async function submitEditAccount(id) {
+            const role = document.getElementById('editRole').value;
+            const name = document.getElementById('editName').value.trim();
+            const password = document.getElementById('editPwd').value;
+            const department = document.getElementById('editDept').value.trim();
+            if (!name) { toast('姓名不能为空', 'warning'); return; }
+            try {
+                await API.put(`/api/auth/accounts/${id}`, { role, name, password, department });
+                toast('已保存');
+                closeModal();
                 loadAccounts();
             } catch (e) { toast(e.message, 'error'); }
         }

@@ -6,6 +6,8 @@
 
 两者均继承自 DataAnalyzer 抽象基类，体现面向对象设计原则。
 算法原理详见 spec 第 5 节。
+
+中文分词使用 jieba（结巴分词），需 pip install jieba。
 """
 
 from __future__ import annotations
@@ -16,31 +18,30 @@ import re
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
 
+import jieba
+
 
 # ---------- 中文分词工具 ----------
 
-# 单字 + 英数 token
-TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fa5]")
-
-
 def tokenize(text: str) -> List[str]:
-    """简易分词：英文/数字整体为一个 token，中文按单字切分。
-
-    这是自研 TF-IDF 的基础分词器。生产版可换为 jieba。
-    """
-    return TOKEN_RE.findall(text)
+    """jieba 分词：精确模式，适合文本分析。"""
+    return [w for w in jieba.cut(text) if w.strip()]
 
 
 def tokenize_bigram(text: str) -> List[str]:
-    """单字 + 双字组合分词。
+    """jieba 分词 + 双字组合。
 
-    用于关键词匹配：单字过粗，双字可命中"合同""担保"等术语。
+    在 jieba 分词结果基础上，对中文词额外生成双字组合，
+    提升短查询的召回率。
     """
-    cn = [t for t in tokenize(text) if re.match(r"[\u4e00-\u9fa5]", t)]
-    tokens = list(cn)  # 保留单字
-    for i in range(len(cn) - 1):
-        tokens.append(cn[i] + cn[i + 1])  # 双字
-    return tokens
+    tokens = tokenize(text)
+    result = list(tokens)
+    for w in tokens:
+        # 对中文词（长度>=2）生成双字组合
+        if len(w) >= 2 and re.match(r"[\u4e00-\u9fa5]+", w):
+            for i in range(len(w) - 1):
+                result.append(w[i:i + 2])
+    return result
 
 
 # ---------- 抽象基类 ----------
@@ -84,15 +85,18 @@ class KeywordMatcher(DataAnalyzer):
     """
 
     STOP_WORDS = {
-        # 常用虚词
+        # 虚词/标点
         "什么", "是", "的", "在", "和", "与", "及", "了", "吗", "呢",
         "啊", "呀", "吧", "把", "被", "让", "使", "给", "为", "对",
-        # 常用实词（过于泛化，无区分度）
+        "我", "你", "他", "她", "它", "们", "这", "那", "其",
+        # 泛化词
         "作用", "区别", "之间", "中", "等", "主要", "通常", "一般",
         "如何", "怎么", "可以", "能够", "应该", "需要", "这个", "那个",
         "哪些", "哪种", "什么", "是不是", "能不能", "有没有",
-        # 单字虚词
-        "一", "二", "三", "个", "种", "项", "类", "的", "了", "在",
+        "如果", "但是", "因为", "所以", "而且", "或者", "虽然",
+        "可能", "已经", "正在", "将要", "没有", "不是",
+        "一个", "这种", "那种", "各种", "一些", "相关",
+        "进行", "使用", "通过", "根据", "按照", "对于", "关于",
     }
 
     LEGAL_TERMS = {
@@ -125,24 +129,17 @@ class KeywordMatcher(DataAnalyzer):
         """从文本中抽取关键词集合。
 
         Returns:
-            关键词集合（单字 + 双字 + 法务术语）
+            关键词集合（jieba 分词 + 双字组合 + 法务术语）
         """
         if not text:
             return set()
 
-        cn = [t for t in tokenize(text) if re.match(r"[\u4e00-\u9fa5]", t)]
+        tokens = tokenize_bigram(text)
         keywords = set()
 
-        # 单字（去停用词）
-        for ch in cn:
-            if ch not in self.STOP_WORDS:
-                keywords.add(ch)
-
-        # 双字组合（去停用词）
-        for i in range(len(cn) - 1):
-            bi = cn[i] + cn[i + 1]
-            if bi not in self.STOP_WORDS:
-                keywords.add(bi)
+        for tok in tokens:
+            if tok not in self.STOP_WORDS:
+                keywords.add(tok)
 
         # 法务术语词典命中
         for term in self.LEGAL_TERMS:

@@ -349,18 +349,38 @@
             el.innerHTML = '<div class="empty">正在调用 AI...</div>';
             try {
                 const res = await API.post('/api/legal/ai_tool', { query, extra_context: ctx });
-                let html = `<div class="chat-msg ai"><div class="role">AI 工具</div>${escapeHtml(res.answer)}</div>`;
+                let html = `<div class="chat-msg ai"><div class="role">AI 工具</div><div style="white-space:pre-wrap">${escapeHtml(res.answer)}</div></div>`;
                 if (res.mode) html += `<div style="margin-top:4px;font-size:12px;color:var(--text-light)">模式：${escapeHtml(res.mode)}</div>`;
                 if (res.results && res.results.length) {
-                    html += '<div style="margin-top:8px;font-size:12px;color:var(--text-light)">相关条目：</div>';
+                    html += '<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">';
+                    html += '<div style="font-weight:600;margin-bottom:8px;color:#334155">📚 知识库参考案例（请标记是否相关）</div>';
                     res.results.forEach(r => {
-                        html += `<div class="ref-item"><span class="ref-score">${(r.score*100).toFixed(0)}%</span><div class="ref-q">[${r.id}] ${escapeHtml(r.question)}</div></div>`;
+                        html += `<div class="ref-item" style="margin-bottom:6px">
+                            <span class="ref-score" style="background:#e8f5e9;color:#16a34a">${(r.score*100).toFixed(0)}%</span>
+                            <span style="color:#2563eb;flex:1">[${r.id}] ${escapeHtml(r.question)}</span>
+                            <span style="display:flex;gap:4px;flex-shrink:0">
+                                <button class="btn btn-sm" onclick="feedback('${r.id}',true,this)" style="background:#e8f5e9;border-color:#16a34a;color:#16a34a">✓ 有关</button>
+                                <button class="btn btn-sm" onclick="feedback('${r.id}',false,this)" style="background:#fef3c7;border-color:#d97706;color:#d97706">✗ 无关</button>
+                            </span>
+                        </div>`;
                     });
+                    html += '</div>';
                 }
                 html += `<div style="margin-top:8px"><button class="btn btn-sm" onclick="useAiResultAsConclusion()">将上述回答填入法务结论</button></div>`;
                 el.innerHTML = html;
                 el.dataset.aiAnswer = res.answer;
             } catch (e) { toast(e.message, 'error'); el.innerHTML = ''; }
+        }
+
+        async function feedback(faqId, relevant, btn) {
+            try {
+                await API.post('/api/ai/feedback', { faq_id: faqId, relevant });
+                toast(relevant ? '已标记为"有关"' : '已标记为"无关"', 'success');
+                const parent = btn.closest('.ref-item');
+                if (parent) {
+                    parent.querySelectorAll('button').forEach(b => b.disabled = true);
+                }
+            } catch (e) { toast(e.message, 'error'); }
         }
 
         function useAiResultAsConclusion() {

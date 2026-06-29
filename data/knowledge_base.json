@@ -1627,13 +1627,13 @@
   },
   {
     "question": "合同第三方付款需要注意什么？",
-    "legal_answer": "第三方付款需谨慎，建议核实第三方资质并签订补充协议。",
-    "compliance_risk": "若第三方资质不明，可能存在资金挪用风险。",
-    "practical_advice": "要求相对方提供第三方书面确认函，并保留付款凭证。",
-    "legal_basis": "《中华人民共和国民法典》第五百一十四条规定。",
+    "legal_answer": "第三方付款需谨慎，建议核实第三方资质并签订补充协议。\n\n第三方付款需谨慎，建议核实第三方资质并签订补充协议。",
+    "compliance_risk": "若第三方资质不明，可能存在资金挪用风险。\n\n若第三方资质不明，可能存在资金挪用风险。",
+    "practical_advice": "要求相对方提供第三方书面确认函，并保留付款凭证。\n\n要求相对方提供第三方书面确认函，并保留付款凭证。",
+    "legal_basis": "《中华人民共和国民法典》第五百一十四条规定。\n\n《中华人民共和国民法典》第五百一十四条规定。",
     "tags": [
-      "合同",
-      "付款"
+      "付款",
+      "合同"
     ],
     "month": "202507",
     "source_work_order_id": "WO-202606-003",
@@ -1641,26 +1641,6 @@
     "id": "FAQ-202507-069",
     "created_by": "legal",
     "created_at": "2026-06-27T00:08:39",
-    "source": "manual",
-    "case_id": null,
-    "category": "其他"
-  },
-  {
-    "question": "合同第三方付款需要注意什么？",
-    "legal_answer": "第三方付款需谨慎，建议核实第三方资质并签订补充协议。",
-    "compliance_risk": "若第三方资质不明，可能存在资金挪用风险。",
-    "practical_advice": "要求相对方提供第三方书面确认函，并保留付款凭证。",
-    "legal_basis": "《中华人民共和国民法典》第五百一十四条规定。",
-    "tags": [
-      "合同",
-      "付款"
-    ],
-    "month": "202507",
-    "source_work_order_id": "WO-202606-004",
-    "status": "confirmed",
-    "id": "FAQ-202507-070",
-    "created_by": "legal",
-    "created_at": "2026-06-27T00:13:52",
     "source": "manual",
     "case_id": null,
     "category": "其他"

@@ -104,3 +104,29 @@ def get_source(faq_id: str):
     if not item:
         return jsonify({"error": "知识库条目不存在"}), 404
     return jsonify(item)
+
+
+@bp.route("/llm_status", methods=["GET"])
+@require_role("admin")
+def llm_status():
+    """查询大模型状态（管理员）。"""
+    return jsonify({
+        "enabled": orchestrator.llm_enabled,
+        "configured": bool(llm_client and llm_client.available),
+        "forced_off": orchestrator._llm_forced_off,
+    })
+
+
+@bp.route("/llm_toggle", methods=["POST"])
+@require_role("admin")
+def llm_toggle():
+    """管理员手动切换大模型开关。"""
+    data = request.get_json() or {}
+    off = data.get("off", True)
+    orchestrator.set_llm_forced_off(off)
+    status = "已关闭" if off else "已开启"
+    return jsonify({
+        "status": "ok",
+        "message": f"大模型{status}",
+        "enabled": orchestrator.llm_enabled,
+    })

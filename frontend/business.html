@@ -203,23 +203,31 @@
                 const modeNote = res.mode === 'rag' && res.relevance !== 'low' && res.relevance !== 'none'
                     ? '<span style="color:#6b7280;font-size:12px">（LLM未启用，使用知识库原文）</span>'
                     : '';
+                const isNoKnowledge = res.relevance === 'none' && (!res.sources || !res.sources.length);
                 const disclaimer = res.disclaimer ? `<div style="margin-top:4px;font-size:12px;color:var(--text-light)">${escapeHtml(res.disclaimer)}</div>` : '';
-                let html = `<div class="chat-msg ai"><div class="role">AI 助手</div>${escapeHtml(res.answer)}`;
+                let html = `<div class="chat-msg ai"><div class="role">AI 助手</div><div style="white-space:pre-wrap">${escapeHtml(res.answer)}</div>`;
                 if (relTag) html += `<div style="margin-top:6px;font-size:12px">${relTag}</div>`;
                 if (modeNote) html += `<div style="font-size:12px">${modeNote}</div>`;
+                if (isNoKnowledge) {
+                    html += `<div style="margin-top:12px;padding:12px;background:#fef3c7;border-radius:8px;font-size:13px;color:#92400e">
+                        <strong>建议：</strong>当前知识库暂无高相关度内容，建议直接<button class="btn btn-primary" onclick="submitToLegal()" style="margin:0 4px;font-size:12px">提交法务处理</button>获取正式法律意见。
+                    </div>`;
+                }
                 html += disclaimer;
                 if (res.sources && res.sources.length) {
-                    html += '<div style="margin-top:8px;font-size:12px;color:var(--text-light)">知识库来源：</div>';
+                    html += '<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">';
+                    html += '<div style="font-weight:600;margin-bottom:8px;color:#334155">📚 知识库参考案例（请标记是否相关）</div>';
                     res.sources.forEach(s => {
-                        html += `<div class="ref-item" data-faq-id="${s.id}">
-                            <span class="ref-score">${(s.score*100).toFixed(0)}%</span>
-                            <a href="javascript:void(0)" onclick="viewSource('${s.id}')" style="color:#2563eb">[${s.id}] ${escapeHtml(s.question)}</a>
-                            <span style="margin-left:auto;font-size:12px">
-                                <button class="btn btn-sm" onclick="feedback('${s.id}',true,this)">有关</button>
-                                <button class="btn btn-sm" onclick="feedback('${s.id}',false,this)">无关</button>
+                        html += `<div class="ref-item" data-faq-id="${s.id}" style="margin-bottom:6px">
+                            <span class="ref-score" style="background:#e8f5e9;color:#16a34a">${(s.score*100).toFixed(0)}%</span>
+                            <a href="javascript:void(0)" onclick="viewSource('${s.id}')" style="color:#2563eb;flex:1">[${s.id}] ${escapeHtml(s.question)}</a>
+                            <span style="display:flex;gap:4px;flex-shrink:0">
+                                <button class="btn btn-sm" onclick="feedback('${s.id}',true,this)" style="background:#e8f5e9;border-color:#16a34a;color:#16a34a">✓ 有关</button>
+                                <button class="btn btn-sm" onclick="feedback('${s.id}',false,this)" style="background:#fef3c7;border-color:#d97706;color:#d97706">✗ 无关</button>
                             </span>
                         </div>`;
                     });
+                    html += '</div>';
                 }
                 html += '</div>';
                 chatArea.innerHTML += html;

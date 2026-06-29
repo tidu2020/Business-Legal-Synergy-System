@@ -282,6 +282,34 @@ class AccountStore:
             return True
         return False
 
+    def update(self, user_id: str, name: str = "",
+               password: str = "", department: str = "",
+               role: str = "") -> bool:
+        """更新账户信息。只更新传入的非空字段。
+
+        Returns:
+            True 表示成功，False 表示账户不存在
+        """
+        if user_id not in self.accounts:
+            return False
+        acct = self.accounts[user_id]
+        if name:
+            acct.name = name
+        if password:
+            acct._pwd_hash = Account._hash_password(password)
+        if department:
+            acct.department = department
+        if role and role in ("business", "legal", "admin"):
+            new_acct = create_account(role, user_id, acct.name,
+                                      password or "placeholder",
+                                      acct.department)
+            # 保留原密码哈希（如果没改密码）
+            if not password:
+                new_acct._pwd_hash = acct._pwd_hash
+            self.accounts[user_id] = new_acct
+        self.save()
+        return True
+
     def list_all(self) -> List[Account]:
         """返回所有账户。"""
         return list(self.accounts.values())

@@ -27,6 +27,9 @@ data/sessions/
 data/archive/
 data/work_orders/
 
+# 环境变量（含密钥，不可提交）
+.env
+
 # 临时文件
 cookies.txt
 

@@ -137,3 +137,34 @@ def delete_account(user_id: str):
     if account_store.delete(user_id):
         return jsonify({"status": "ok"})
     return jsonify({"error": "账户不存在"}), 404
+
+
+@bp.route("/accounts/<user_id>", methods=["PUT"])
+@require_role("admin")
+def update_account(user_id: str):
+    """编辑账户信息（仅管理员）。
+
+    请求体：{"name": "...", "password": "...", "department": "...", "role": "..."}
+    只更新传入的非空字段。
+    """
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    password = data.get("password") or ""
+    department = (data.get("department") or "").strip()
+    role = (data.get("role") or "").strip()
+
+    if role and role not in ("business", "legal", "admin"):
+        return jsonify({"error": f"无效角色：{role}"}), 400
+
+    if not account_store.update(user_id, name=name, password=password,
+                                department=department, role=role):
+        return jsonify({"error": "账户不存在"}), 404
+
+    # 返回更新后的账户信息
+    acct = account_store.accounts.get(user_id)
+    return jsonify({
+        "id": acct.id,
+        "name": acct.name,
+        "role": acct.role(),
+        "department": acct.department,
+    })
