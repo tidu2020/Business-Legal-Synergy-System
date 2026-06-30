@@ -56,7 +56,7 @@ class Config:
     DATA_DIR = os.path.join(BASE_DIR, "data")
     ACCOUNTS_PATH = os.path.join(DATA_DIR, "accounts.json")
     KNOWLEDGE_BASE_PATH = os.path.join(DATA_DIR, "knowledge_base.json")
-    FAQ_SOURCE = os.path.join(BASE_DIR, "FAQ整理-最终版.md")
+    FAQ_SOURCE = os.path.join(BASE_DIR, "docs", "FAQ整理-最终版.md")
     WORK_ORDERS_DIR = os.path.join(DATA_DIR, "work_orders")
     ARCHIVE_DIR = os.path.join(DATA_DIR, "archive")
     MERGE_REJECTIONS_PATH = os.path.join(DATA_DIR, "merge_rejections.json")
