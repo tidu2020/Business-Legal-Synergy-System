@@ -26,7 +26,7 @@ class KnowledgeBase:
     """
 
     def __init__(self, data_path: str = "data/knowledge_base.json",
-                 source_md: str = "FAQ_四部分版_最终.md"):
+                 source_md: str = "FAQ整理-最终版.md"):
         self.data_path = data_path
         self.source_md = source_md
         self.items: List[Dict] = []

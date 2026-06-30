@@ -104,7 +104,7 @@ python -m backend.ai.llm_client
 │   ├─ integration_test.py   # 端到端集成测试
 │   └─ smoke_test.py         # 单元冒烟测试
 ├─ docs/                     # 文档
-└─ FAQ_四部分版_最终.md       # 知识库源文件
+└─ FAQ整理-最终版.md       # 知识库源文件
 ```
 
 ---

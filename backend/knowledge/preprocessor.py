@@ -1,4 +1,4 @@
-"""FAQ 预处理器：解析 FAQ_四部分版_最终.md 为结构化知识库 JSON。
+"""FAQ 预处理器：解析 FAQ整理-最终版.md 为结构化知识库 JSON。
 
 输入：Markdown 文件，结构为：
     # 法务问答汇编
@@ -52,7 +52,7 @@ class DataPreprocessor:
     # 问题标识正则：### Q1：问题内容？
     QUESTION_RE = re.compile(r"^###\s*Q(\d+)[：:]\s*(.+?)\s*$")
 
-    def __init__(self, source_file: str = "FAQ_四部分版_最终.md"):
+    def __init__(self, source_file: str = "FAQ整理-最终版.md"):
         self.source_file = source_file
         self._items: List[Dict] = []
         self._current_month: Optional[str] = None
@@ -247,7 +247,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="FAQ 预处理器")
-    parser.add_argument("--source", default="FAQ_四部分版_最终.md",
+    parser.add_argument("--source", default="FAQ整理-最终版.md",
                         help="FAQ 源 Markdown 文件路径")
     parser.add_argument("--output", default="data/knowledge_base.json",
                         help="输出 JSON 文件路径")
